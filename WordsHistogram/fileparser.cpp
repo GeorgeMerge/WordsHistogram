@@ -23,13 +23,13 @@ void FileParser::parseFile(QString filePath)
        QTextStream in(&inputFile);      
        timer.start();
        QString data = QString(in.readAll().toLocal8Bit());
-       qDebug()<<"in.readAll().toLocal8Bit() took"<<timer.elapsed() / 1000;
-       data = data.replace(QRegExp("[^a-zA-Zа-яА-Я]"), " ");
-       qDebug()<<"data.replace(QRegExp([^a-zA-Zа-яА-Я]), " ")"<<timer.elapsed() / 1000;
+       data = replacePatternWithWhitespaceConcurrently(data, QRegExp("[^a-zA-Zа-яА-Я]"), 20);
+       qDebug()<<"replacePatternWithWhitespaceConcurrently took"<<timer.elapsed();
+//       data = data.replace(QRegExp("[^a-zA-Zа-яА-Я]"), " ");
        data = data.simplified();
-       qDebug()<<"data.simplified() took"<<timer.elapsed() / 1000;
+       qDebug()<<"data.simplified() took"<<timer.elapsed();
        data = data.toLower();
-       qDebug()<<"data.toLower() took"<<timer.elapsed() / 1000;
+       qDebug()<<"data.toLower() took"<<timer.elapsed();
        emit progressChanged(50);
        QStringList words = data.split(" ");
        int progress_60_words = words.size() / 3;
@@ -50,6 +50,7 @@ void FileParser::parseFile(QString filePath)
               emit progressChanged(70);
           }
        }
+       qDebug()<<"map forming took"<<timer.elapsed();
        emit progressChanged(80);
        inputFile.close();
     }
@@ -62,21 +63,62 @@ void FileParser::parseFile(QString filePath)
     for (auto key : toReturn.keys()) {
         temp.append(QPair<int, QString>(toReturn.value(key).value<int>(), key));
     }
-
+    qDebug()<<"temp map forming took"<<timer.elapsed();
     std::sort(temp.begin(), temp.end(), [](QPair<int, QString> a, QPair<int, QString> b) {
         return a.first > b.first;
     });
 
+    qDebug()<<"sort took"<<timer.elapsed();
     emit progressChanged(85);
     if (temp.size() > 15) {
         for (int i = 15; i< temp.size(); i++) {
             toReturn.remove(temp[i].second);
         }
     }
+    qDebug()<<"key removing took"<<timer.elapsed();
 
     emit progressChanged(100);
     emit fileParsed(toReturn);
-    qDebug()<<"Everything" << timer.elapsed() / 1000;
+}
+
+QString FileParser::replacePatternWithWhitespaceConcurrently(QString &data, QRegExp pattern, int substrings)
+{
+    if (data.length() < substrings) {
+        return data;
+    }
+    QStringList dataList;
+
+    int substrSize = data.length() / substrings;
+    splitString(data, substrSize, dataList);
+
+    std::function<void(QString&)> replaceFunc = [pattern](QString &string) {
+        string.replace(pattern, " ");
+    };
+
+    QtConcurrent::blockingMap(dataList, replaceFunc);
+    return dataList.join("");
+}
+
+void FileParser::splitString(const QString &str, int n, QStringList &list)
+{
+    if (n < 1 || str.length() < n) {
+        list.append(str);
+        return;
+    }
+
+    QString tmp(str);
+
+    list.clear();
+
+    while (!tmp.isEmpty()) {
+        list.append(tmp.left(n));
+        tmp.remove(0, n);
+    }
+
+    if ((list.last().length() / list.first().length()) < 0.5 && list.size() >= 2) {
+        list[list.length() - 2].append(list.last());
+        list.removeLast();
+    }
 }
 
 void FileParser::parseFileInSeparateThread(QString filePath)
