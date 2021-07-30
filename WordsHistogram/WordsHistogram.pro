@@ -7,10 +7,10 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-        fileparser.cpp \
-        main.cpp
+        src/c++/fileparser.cpp \
+        src/c++/main.cpp
 
-RESOURCES += qml.qrc
+RESOURCES += src/qml/qml.qrc
 
 Release:DESTDIR = release
 Release:OBJECTS_DIR = release/.obj

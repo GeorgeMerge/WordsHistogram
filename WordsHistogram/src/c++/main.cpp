@@ -1,6 +1,5 @@
 #include "fileparser.h"
 
-#include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QApplication>
 
@@ -22,11 +21,7 @@ int main(int argc, char *argv[])
     Qt::QueuedConnection);
 
     qmlRegisterType<FileParser>("FileParser", 1, 0, "FileParser");
-//    qmlRegisterType<QMap<QString, int>>("FileParser", 1, 0, "StringCounter");
     engine.load(url);
-
-//    QVariantMap words = FileParser().parseFile(QCoreApplication::applicationDirPath() + "/Input.txt");
-//    qDebug()<<words;
 
     return app.exec();
 }

@@ -139,7 +139,7 @@ Window {
         ChartView {
             animationOptions: ChartView.SeriesAnimations
             theme: ChartView.ChartThemeBlueIcy
-            title: "Words hist"
+            title: "Words histogram"
             titleFont.family: "Segoe UI Symbol"
             legend.font.family: "Segoe UI Symbol"
             legend.font.pointSize: 8
@@ -162,8 +162,4 @@ Window {
 
         }
     }
-
-
-
-
 }
